@@ -45,3 +45,59 @@ def plot_points(data):
     response_reject = X[np.argwhere(y==0)]
     plt.scatter([s[0][0] for s in response_reject], [s[0][1] for s in response_reject], s = 25, color = 'red', edgecolor = 'k')
     plt.scatter([s[0][0] for s in response_accept], [s[0][1] for s in response_accept], s = 25, color = 'cyan', edgecolor = 'k')
+
+
+
+
+
+################### Neural Network ###################
+
+# Training function
+def train_nn(features, targets, epochs, learnrate):
+    
+    # Use to same seed to make debugging easier
+    np.random.seed(42)
+    n_records, n_features = features.shape
+    last_loss = None
+
+    # Initialize weights
+    weights = np.random.normal(scale=1 / n_features**.5, size=n_features)
+
+    for e in range(epochs):
+        prev_w = np.zeros(weights.shape)
+        for x, y in zip(features.values, targets):
+            # Loop through all records, x is the input, y is the target
+
+            # Activation of the output unit
+            #   Notice we multiply the inputs and the weights here 
+            #   rather than storing h as a separate variable 
+            output = sigmoid(np.dot(x, weights))
+
+            # The error term
+            error_term = error_term_formula(x, y, output)
+
+            # The gradient descent step, the error times the gradient times the inputs
+            
+            prev_w += np.array(error_term, dtype=float)
+
+        # Update the weights here. The learning rate times the 
+        # change in weights
+        # don't have to divide by n_records since it is compensated by the learning rate
+        weights += learnrate * prev_w #/ n_records  
+
+        # Printing out the mean square error on the training set
+        if e % (epochs / 10) == 0:
+            x1 = np.dot(features, weights)
+            # print(weights.dtype)
+            out = sigmoid(x1.astype(float))
+            loss = np.mean(error_formula(targets, out))
+            print("Epoch:", e)
+            if last_loss and last_loss < loss:
+                print("Train loss: ", loss, "  WARNING - Loss Increasing")
+            else:
+                print("Train loss: ", loss)
+            last_loss = loss
+            print("=========")
+    print("Finished training!")
+    return weights
+    
