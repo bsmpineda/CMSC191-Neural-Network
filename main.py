@@ -46,19 +46,13 @@ print("\n--------------- START TRAINING -----------------------\n")
 
 # Define input size, hidden layer size, and output size
 input_size = X_train.shape[1]
-hidden_size = 5  # Arbitrary hidden layer size
+hidden_size = 4  # Arbitrary hidden layer size
 output_size = Y_train.shape[1]
 
 # Create and train the neural network
 nn = NeuralNetwork(input_size, hidden_size, output_size, learnrate)
 nn.train(X_train, Y_train, X_val, Y_val, epochs)
 
-# print("X_train shape:", X_train.shape)
-# print("y_train shape:", Y_train.shape)
-# print("X_val shape:", X_val.shape)
-# print("y_val shape:", Y_val.shape)
-# print("X_test shape:", X_test.shape)
-# print("y_test shape:", Y_test.shape)
 
 print("--------------- DONE TRAINING -----------------------\n")
 

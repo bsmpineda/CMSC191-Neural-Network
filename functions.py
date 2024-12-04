@@ -52,10 +52,13 @@ class NeuralNetwork:
         self.weights_input_hidden += X.T.dot(d_hidden) * self.learning_rate
         self.bias_hidden += np.sum(d_hidden, axis=0) * self.learning_rate
 
-    def train(self, X_train, y_train, X_val, y_val, epochs=1000, patience=20):
+    def train(self, X_train, y_train, X_val, y_val, epochs=1000, patience=5):
         best_val_loss = np.inf
         patience_counter = 0
         best_weights = None
+
+        val_accuracy_history = []  # To store validation accuracy for each epoch
+        val_loss_history = []      # To store validation loss for each epoch
 
         for epoch in range(epochs):
             # Forward pass for training data
@@ -68,12 +71,17 @@ class NeuralNetwork:
             val_loss = mse_loss(y_val, val_output)
             val_acc = accuracy(y_val, val_output)
 
+            # Store validation accuracy and loss
+            val_accuracy_history.append(val_acc)
+            val_loss_history.append(val_loss)
+           
+
             # Print progress
-            if (epoch + 1) % 100 == 0:
+            if (epoch + 1) % 10 == 0:
                 print(f'Epoch {epoch+1}/{epochs} - Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}, Val Accuracy: {val_acc:.2f}%')
 
             # Early stopping logic
-            if round(val_loss, 6) < round(best_val_loss, 6):
+            if round(val_loss, 5) < round(best_val_loss, 5):
                 best_val_loss = val_loss
                 best_weights = (self.weights_input_hidden.copy(), self.bias_hidden.copy(),
                                 self.weights_hidden_output.copy(), self.bias_output.copy())
@@ -89,6 +97,12 @@ class NeuralNetwork:
         if best_weights:
             self.weights_input_hidden, self.bias_hidden, self.weights_hidden_output, self.bias_output = best_weights
             print("Restored best model weights based on validation loss.")
+
+        # Call the plotting functions for accuracy and loss
+        plot_accuracy(val_accuracy_history)
+        plot_loss(val_loss_history)
+        # plot_accuracy(val_accuracy_history, start_epoch=40)
+        # plot_loss(val_loss_history, start_epoch=40)
 
     def test(self, X_test, y_test):
         # Perform testing by predicting on test set
@@ -188,12 +202,6 @@ def processData(data):
     # Step 2: Split the temp set into validation and test sets (15% each)
     validation_data, test_data = train_test_split(temp_data, test_size=0.5, random_state=42)
 
-    # print("Number of training samples is", len(train_data))
-    # print("Number of testing samples is", len(test_data))
-    # print("Number of validating samples is", len(validation_data))
-    # print("------------ TRAIN DATA --------------\n", train_data[:10])
-    # print("\n------------ VALIDATING DATA --------------\n", validation_data[:10])
-    # print("\n------------ TEST DATA --------------\n", test_data[:10])
 
     return train_data, validation_data, test_data
 
@@ -218,12 +226,57 @@ def accuracy(y_true, y_pred):
 
 ################### PLOTTING DATA #############################
 
-# TODO: Complete code
-def plot_points(data):
-    #store columns Year_Birth, Education, Marital_Status, and Income to X
-    X = np.array(data[["Year_Birth", "Education", "Marital_Status", "Income"]]) 
-    y = np.array(data["Response"]) #outputs
-    response_accept = X[np.argwhere(y==1)]
-    response_reject = X[np.argwhere(y==0)]
-    plt.scatter([s[0][0] for s in response_reject], [s[0][1] for s in response_reject], s = 25, color = 'red', edgecolor = 'k')
-    plt.scatter([s[0][0] for s in response_accept], [s[0][1] for s in response_accept], s = 25, color = 'cyan', edgecolor = 'k')
+# Function to plot and save loss
+def plot_loss(train_losses, val_losses, filename):
+    epochs = range(1, len(train_losses) + 1)
+    plt.plot(epochs, train_losses, label='Training Loss')
+    plt.plot(epochs, val_losses, label='Validation Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.title('Training and Validation Loss')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(filename)
+    plt.close()
+
+def plot_accuracy(val_accuracy_history, start_epoch=1):
+    """
+    Function to plot and save validation accuracy over epochs.
+    Args:
+    - val_accuracy_history: list of validation accuracy per epoch
+    - start_epoch: the epoch to start the plot from (for zooming)
+    """
+    epochs = range(start_epoch, len(val_accuracy_history) + 1)
+    
+    plt.figure(figsize=(6, 6))
+    plt.plot(epochs, val_accuracy_history[start_epoch - 1:], label='Validation Accuracy')
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy')
+    plt.title(f'Validation Accuracy over Epochs (from epoch {start_epoch})')
+    plt.legend()
+    plt.grid(True)
+    
+    # Save the accuracy plot
+    plt.savefig(f'Results/validation_accuracy_plot_from_epoch_{start_epoch}.png')  # Save as a PNG file
+    plt.show()
+
+def plot_loss(val_loss_history, start_epoch=1):
+    """
+    Function to plot and save validation loss over epochs.
+    Args:
+    - val_loss_history: list of validation loss per epoch
+    - start_epoch: the epoch to start the plot from (for zooming)
+    """
+    epochs = range(start_epoch, len(val_loss_history) + 1)
+    
+    plt.figure(figsize=(6, 6))
+    plt.plot(epochs, val_loss_history[start_epoch - 1:], label='Validation Loss', color='red')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.title(f'Validation Loss over Epochs (from epoch {start_epoch})')
+    plt.legend()
+    plt.grid(True)
+    
+    # Save the loss plot
+    plt.savefig(f'Results/validation_loss_plot_from_epoch_{start_epoch}.png')  # Save as a PNG file
+    plt.show()
